@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Geo find 🔎</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+  </head>
+  <body>
+    <h1>Geo find 🔎</h1>
+
+    <h2>Target location</h2>
+    <form name="targetForm">
+      <label for="targetLatitude">Target latitude</label>
+      <input id="targetLatitude" name="targetLatitude" />
+      <label for="targetLongitude">Target longitude</label>
+      <input id="targetLongitude" name="targetLongitude" />
+    </form>
+
+    <h2>Device location</h2>
+    <p>Click on the map to change the device location</p>
+    <div id="map"></div>
+    <style>
+      #map {
+        height: 180px;
+      }
+    </style>
+    <a id="maplink" href="#">Open street map</a>
+
+    <p>or click on the button to enable native geolocation</p>
+    <button type="button" onclick="start()">Enable native geolocation</button>
+
+    <h2>Game hint</h2>
+    <p id="gameHint"></p>
+
+    <h2>Current measure</h2>
+    <p id="lastPositionUpdate"></p>
+    <p id="latitude"></p>
+    <p id="longitude"></p>
+    <p id="distanceHarvesine"></p>
+    <p id="distanceInverseVincenty"></p>
+
+    <h2>Previous measure</h2>
+    <p id="previousLastPositionUpdate"></p>
+    <p id="previousLatitude"></p>
+    <p id="previousLongitude"></p>
+    <p id="previousDistanceHarvesine"></p>
+    <p id="previousDistanceInverseVincenty"></p>
+
+    <script>
+      const map = L.map("map");
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+      const targetMarker = L.marker().addTo(map);
+      const deviceMarker = L.circle([0, 0], { radius: 100 }).addTo(map);
+      map.on("click", onMapClick);
+
+      const initialTargetLatitude = 48.110057410082916;
+      const initialTargetLongitude = -1.389394998550415;
+      document.querySelector("#targetLatitude").value = initialTargetLatitude;
+      document.querySelector("#targetLongitude").value = initialTargetLongitude;
+
+      let previousLastPositionUpdate = new Date().getTime();
+      let previousLatitude = initialTargetLatitude;
+      let previousLongitude = initialTargetLongitude;
+      let previousDistanceHarvesine = 0;
+      let previousDistanceInverseVincenty = 0;
+
+      targetMarker.setLatLng([initialTargetLatitude, initialTargetLongitude]);
+      map.setView([initialTargetLatitude, initialTargetLongitude], 13);
+
+      function positionUpdated(
+        latitude,
+        longitude,
+        targetLatitude,
+        targetLongitude
+      ) {
+        console.log("DEBUG Lat/Lon", latitude, longitude);
+        console.log("DEBUG Target Lat/Lon", targetLatitude, targetLongitude);
+
+        // Current Measure
+        const lastPositionUpdate = new Date().getTime();
+        document.querySelector("#lastPositionUpdate").textContent =
+          lastPositionUpdate;
+        document.querySelector(
+          "#latitude"
+        ).textContent = `Latitude: ${latitude}°`;
+        document.querySelector(
+          "#longitude"
+        ).textContent = `Longitude: ${longitude}°`;
+
+        const distanceHarvesine = haversineDistance(
+          latitude,
+          longitude,
+          targetLatitude,
+          targetLongitude
+        );
+        document.querySelector(
+          "#distanceHarvesine"
+        ).textContent = `Distance (Harvesine): ${Math.round(
+          distanceHarvesine
+        )} m`;
+
+        const distanceInverseVincenty = inverseVincentyDistance(
+          latitude,
+          longitude,
+          targetLatitude,
+          targetLongitude
+        );
+        document.querySelector(
+          "#distanceInverseVincenty"
+        ).textContent = `Distance (Inverse Vincenty): ${Math.round(
+          distanceInverseVincenty
+        )} m`;
+
+        // Map
+        const mapUrl = `https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`;
+        document.querySelector("#maplink").href = mapUrl;
+
+        deviceMarker.setLatLng([latitude, longitude]);
+        targetMarker.setLatLng([targetLatitude, targetLongitude]);
+        map.setView([targetLatitude, targetLongitude], 13);
+
+        // Game Hint
+        document.querySelector("#gameHint").textContent =
+          distanceInverseVincenty - previousDistanceInverseVincenty < 0
+            ? "🔥"
+            : "❄️";
+
+        // Previous measure
+        document.querySelector("#previousLastPositionUpdate").textContent =
+          previousLastPositionUpdate;
+        document.querySelector(
+          "#previousLatitude"
+        ).textContent = `Latitude: ${previousLatitude}°`;
+        document.querySelector(
+          "#previousLongitude"
+        ).textContent = `Longitude: ${previousLongitude}°`;
+        document.querySelector(
+          "#previousDistanceHarvesine"
+        ).textContent = `Distance (Harvesine): ${Math.round(
+          previousDistanceHarvesine
+        )} m`;
+        document.querySelector(
+          "#previousDistanceInverseVincenty"
+        ).textContent = `Distance (Inverse Vincenty): ${Math.round(
+          previousDistanceInverseVincenty
+        )} m`;
+        previousLastPositionUpdate = lastPositionUpdate;
+        previousLatitude = latitude;
+        previousLongitude = longitude;
+        previousDistanceHarvesine = distanceHarvesine;
+        previousDistanceInverseVincenty = distanceInverseVincenty;
+      }
+
+      function onMapClick(e) {
+        const latitude = e.latlng.lat;
+        const longitude = e.latlng.lng;
+
+        const targetLatitude = document.forms.targetForm.targetLatitude.value;
+        const targetLongitude = document.forms.targetForm.targetLongitude.value;
+
+        positionUpdated(latitude, longitude, targetLatitude, targetLongitude);
+      }
+
+      function start(e) {
+        if ("geolocation" in navigator) {
+          function success(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            const targetLatitude =
+              document.forms.targetForm.targetLatitude.value;
+            const targetLongitude =
+              document.forms.targetForm.targetLongitude.value;
+
+            positionUpdated(
+              latitude,
+              longitude,
+              targetLatitude,
+              targetLongitude
+            );
+          }
+
+          function error(error) {
+            console.error(error);
+          }
+
+          // see https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition#options
+          const options = {
+            enableHighAccuracy: true,
+            maximumAge: 3000,
+            timeout: 27000,
+          };
+
+          navigator.geolocation.watchPosition(success, error, options);
+        } else {
+          alert(`geolocation IS NOT available`);
+        }
+      }
+
+      // https://www.jameslmilner.com/posts/measuring-the-world-with-javascript/
+      function haversineDistance(latitude1, longitude1, latitude2, longitude2) {
+        const toRadians = (latOrLng) => (latOrLng * Math.PI) / 180;
+
+        const phiOne = toRadians(latitude1);
+        const lambdaOne = toRadians(longitude1);
+        const phiTwo = toRadians(latitude2);
+        const lambdaTwo = toRadians(longitude2);
+        const deltaPhi = phiTwo - phiOne;
+        const deltalambda = lambdaTwo - lambdaOne;
+
+        const a =
+          Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+          Math.cos(phiOne) *
+            Math.cos(phiTwo) *
+            Math.sin(deltalambda / 2) *
+            Math.sin(deltalambda / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        const radius = 6371e3;
+        const distance = radius * c;
+
+        return distance;
+      }
+
+      function inverseVincentyDistance(
+        latitude1,
+        longitude1,
+        latitude2,
+        longitude2
+      ) {
+        const toRadians = (latOrLng) => (latOrLng * Math.PI) / 180;
+
+        const phiOne = toRadians(latitude1);
+        const lambda1 = toRadians(longitude1);
+        const phiTwo = toRadians(latitude2);
+        const lambda2 = toRadians(longitude2);
+
+        const wgs84ellipsoid = {
+          a: 6378137,
+          b: 6356752.314245,
+          f: 1 / 298.257223563,
+        };
+        const { a, b, f } = wgs84ellipsoid;
+
+        const L = lambda2 - lambda1; // L = difference in longitude, U = reduced latitude, defined by tan U = (1-f)·tanphi.
+        const tanU1 = (1 - f) * Math.tan(phiOne),
+          cosU1 = 1 / Math.sqrt(1 + tanU1 * tanU1),
+          sinU1 = tanU1 * cosU1;
+        const tanU2 = (1 - f) * Math.tan(phiTwo),
+          cosU2 = 1 / Math.sqrt(1 + tanU2 * tanU2),
+          sinU2 = tanU2 * cosU2;
+
+        const antipodal =
+          Math.abs(L) > Math.PI / 2 || Math.abs(phiTwo - phiOne) > Math.PI / 2;
+
+        let lambda = L,
+          sinLambda = null,
+          cosLambda = null; // lambda = difference in longitude on an auxiliary sphere
+        let sigma = antipodal ? Math.PI : 0,
+          sinSigma = 0,
+          cosSigma = antipodal ? -1 : 1,
+          sinSqsigma = null; // sigma = angular distance P₁ P₂ on the sphere
+        let cos2sigmaM = 1; // sigmaM = angular distance on the sphere from the equator to the midpoint of the line
+        let sinalpha = null,
+          cosSqAlpha = 1; // alpha = azimuth of the geodesic at the equator
+        let C = null;
+
+        let lambdaʹ = null,
+          iterations = 0;
+        do {
+          sinLambda = Math.sin(lambda);
+          cosLambda = Math.cos(lambda);
+          sinSqsigma =
+            cosU2 * sinLambda * (cosU2 * sinLambda) +
+            (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) *
+              (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda);
+
+          if (Math.abs(sinSqsigma) < Number.EPSILON) {
+            break; // co-incident/antipodal points (falls back on lambda/sigma = L)
+          }
+
+          sinSigma = Math.sqrt(sinSqsigma);
+          cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda;
+          sigma = Math.atan2(sinSigma, cosSigma);
+          sinalpha = (cosU1 * cosU2 * sinLambda) / sinSigma;
+          cosSqAlpha = 1 - sinalpha * sinalpha;
+          cos2sigmaM =
+            cosSqAlpha != 0 ? cosSigma - (2 * sinU1 * sinU2) / cosSqAlpha : 0; // on equatorial line cos²alpha = 0 (§6)
+          C = (f / 16) * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha));
+          lambdaʹ = lambda;
+          lambda =
+            L +
+            (1 - C) *
+              f *
+              sinalpha *
+              (sigma +
+                C *
+                  sinSigma *
+                  (cos2sigmaM +
+                    C * cosSigma * (-1 + 2 * cos2sigmaM * cos2sigmaM)));
+          const iterationCheck = antipodal
+            ? Math.abs(lambda) - Math.PI
+            : Math.abs(lambda);
+          if (iterationCheck > Math.PI) {
+            throw new Error("lambda > Math.PI");
+          }
+        } while (Math.abs(lambda - lambdaʹ) > 1e-12 && ++iterations < 1000);
+        if (iterations >= 1000) {
+          throw new Error("Vincenty formula failed to converge");
+        }
+
+        const uSq = (cosSqAlpha * (a * a - b * b)) / (b * b);
+        const A =
+          1 + (uSq / 16384) * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
+        const B = (uSq / 1024) * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
+        const deltaSigma =
+          B *
+          sinSigma *
+          (cos2sigmaM +
+            (B / 4) *
+              (cosSigma * (-1 + 2 * cos2sigmaM * cos2sigmaM) -
+                (B / 6) *
+                  cos2sigmaM *
+                  (-3 + 4 * sinSigma * sinSigma) *
+                  (-3 + 4 * cos2sigmaM * cos2sigmaM)));
+
+        const distance = b * A * (sigma - deltaSigma); // distance = length of the geodesic
+
+        return distance;
+      }
+    </script>
+  </body>
+</html>
