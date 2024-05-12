@@ -22,8 +22,18 @@
 
     <h3>2 - Techniques</h3>
 
-    <!-- TODO remplacer le bouton et le paragraphe par le composant de recherche -->
-    <p>Prêts ?!</p>
-    <a href="chateaubourg-sculpteurs-2-find.html">C'est parti !</a>
+    <script src="geo-trouve.mjs" type="module"></script>
+    <geo-trouve
+      latitude="48.110057410082916"
+      longitude="-1.389394998550415"
+      question="Quelle technique n'est pas citée sur ce panneau ?"
+      reponse-1="Technique 1"
+      reponse-2="Technique 2"
+      reponse-3="Technique 3"
+    ></geo-trouve>
+
+    <!-- TODO remplacer cette page par un composant de recherche directement intégré sur la page de la cache, 
+      comme ca pas besoin d'une page dédiée à la recherche pour chaque cache -->
+    <a href="chateaubourg-sculpteurs-2-question.html">DEBUG trouvé</a>
   </body>
 </html>
