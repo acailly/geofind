@@ -1,0 +1,38 @@
+/* TODO Utiliser une CSS classless ? https://simplecss.org/demo */
+
+body {
+  display: flex;
+  flex-direction: column;
+  margin-top: 5vh;
+  align-items: center;
+  height: 100vh;
+  overflow-y: auto;
+}
+/* from https://www.joshwcomeau.com/animation/3d-button/ */
+.geo-trouve-button {
+  border-radius: 12px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline-offset: 4px;
+}
+.geo-trouve-button-red {
+  background: hsl(0 100% 30%);
+}
+a.geo-trouve-button {
+  text-decoration: none;
+}
+.geo-trouve-button span {
+  display: block;
+  padding: 12px 42px;
+  border-radius: 12px;
+  font-size: 1.25rem;
+  transform: translateY(-6px);
+}
+.geo-trouve-button-red span {
+  background: hsl(0 100% 45%);
+  color: white;
+}
+.geo-trouve-button:active span {
+  transform: translateY(-2px);
+}
