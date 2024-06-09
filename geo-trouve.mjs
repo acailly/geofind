@@ -7,10 +7,18 @@ if (!customElements.get("geo-trouve")) {
       IS_ON_TARGET_RANGE = 20;
       DISPLAY_UPDATE_INTERVAL = 3000;
 
+      // Reflected properties, to handle changes, https://blog.ltgt.net/web-component-properties/
+      get targetLatitude() {
+        return this.getAttribute("latitude");
+      }
+
+      get targetLongitude() {
+        return this.getAttribute("longitude");
+      }
+
       connectedCallback() {
         // GET INPUT PARAMS
-        this.targetLatitude = this.getAttribute("latitude");
-        this.targetLongitude = this.getAttribute("longitude");
+        this.showDebugInfo = this.hasAttribute("debug");
         this.question = this.getAttribute("question");
         this.reponses = [];
 
@@ -126,32 +134,38 @@ if (!customElements.get("geo-trouve")) {
               <p class="geo-trouve-distance">Commence à te déplacer</p>
             </div>
           </div>
-          <details>
-            <summary>
-              <div>DEBUG</div>
-            </summary>
-            <div class="geo-trouve-debug">-- INPUT --</div>
-            <div class="geo-trouve-debug">
-              Target: Lat=${this.targetLatitude}, Lon=${this.targetLongitude}
-            </div>
-            <div class="geo-trouve-debug">Question=${this.question}</div>
-            <div class="geo-trouve-debug">
-              Réponses=${this.reponses.join(",")}
-            </div>
-            <div class="geo-trouve-debug">-- MESURES --</div>
-            <div
-              class="geo-trouve-debug geo-trouve-debug-current-position"
-            ></div>
-            <div
-              class="geo-trouve-debug geo-trouve-debug-previous-distance"
-            ></div>
-          </details>
+          ${this.showDebugInfo
+            ? html`<details>
+                <summary>
+                  <div>DEBUG</div>
+                </summary>
+                <div class="geo-trouve-debug">-- INPUT --</div>
+                <div class="geo-trouve-debug geo-trouve-debug-target-position">
+                  Target position : Lat=${this.targetLatitude}
+                  Lon=${this.targetLongitude}
+                </div>
+                <div class="geo-trouve-debug">Question=${this.question}</div>
+                <div class="geo-trouve-debug">
+                  Réponses=${this.reponses.join(",")}
+                </div>
+                <div class="geo-trouve-debug">-- MESURES --</div>
+                <div
+                  class="geo-trouve-debug geo-trouve-debug-current-position"
+                ></div>
+                <div
+                  class="geo-trouve-debug geo-trouve-debug-previous-distance"
+                ></div>
+              </details>`
+            : ""}
         `;
 
         this.start();
       }
 
       start() {
+        // TODO empecher la veille de l'écran
+        // https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API
+
         if ("geolocation" in navigator) {
           const success = (position) => {
             const latitude = position.coords.latitude;
@@ -191,17 +205,26 @@ if (!customElements.get("geo-trouve")) {
           this.targetLatitude,
           this.targetLongitude
         );
-        if (shouldUpdateDisplay) {
-          document.querySelector(
-            ".geo-trouve-distance"
-          ).textContent = `Distance: ${Math.round(distanceInverseVincenty)} m`;
-          // DEBUG
+
+        // DEBUG
+        if (this.showDebugInfo) {
           document.querySelector(
             ".geo-trouve-debug-previous-distance"
           ).textContent = `Ancienne distance : ${this.previousDistanceInverseVincenty} m`;
           document.querySelector(
             ".geo-trouve-debug-current-position"
           ).textContent = `Position : Lat=${latitude} Lon=${longitude}`;
+          document.querySelector(
+            ".geo-trouve-debug-target-position"
+          ).textContent = `Target position : Lat=${this.targetLatitude} Lon=${this.targetLongitude}`;
+        }
+
+        // Update display
+        if (shouldUpdateDisplay) {
+          // Distance
+          document.querySelector(
+            ".geo-trouve-distance"
+          ).textContent = `Distance: ${Math.round(distanceInverseVincenty)} m`;
 
           // Game Hint
           const isOnTarget = distanceInverseVincenty < this.IS_ON_TARGET_RANGE;

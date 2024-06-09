@@ -48,6 +48,9 @@ ul li:hover {
 .geo-trouve-button-red {
   background: hsl(0 100% 30%);
 }
+.geo-trouve-button-gray {
+  background: lightgray;
+}
 a.geo-trouve-button {
   text-decoration: none;
 }
@@ -60,6 +63,10 @@ a.geo-trouve-button {
 }
 .geo-trouve-button-red span {
   background: hsl(0 100% 45%);
+  color: white;
+}
+.geo-trouve-button-gray span {
+  background: gray;
   color: white;
 }
 .geo-trouve-button:active span {

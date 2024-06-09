@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Geo find 🔎</title>
+    <link rel="stylesheet" href="main.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+  </head>
+  <body>
+    <h1>Geo Trouve 🔎</h1>
+
+    <h2>Page de test</h2>
+
+    <h3>C'est parti !</h3>
+
+    <script src="geo-trouve.mjs" type="module"></script>
+    <geo-trouve
+      id="geo-trouve"
+      latitude="48.109075"
+      longitude="-1.390062"
+      question="Quelle technique n'est pas citée sur ce panneau ?"
+      reponse-1="Technique 1"
+      reponse-2="Technique 2"
+      reponse-3="Technique 3"
+    ></geo-trouve>
+
+    <details class="map-details">
+      <summary>Emplacement de la cache</summary>
+      <form name="targetForm">
+        <label for="targetLatitude">Target latitude</label>
+        <input id="targetLatitude" name="targetLatitude" />
+        <label for="targetLongitude">Target longitude</label>
+        <input id="targetLongitude" name="targetLongitude" />
+      </form>
+
+      <p>Cliquer sur la carte pour changer l'emplacement</p>
+      <div id="map"></div>
+    </details>
+    <style>
+      #map {
+        height: 600px;
+        width: 80vw;
+      }
+
+      .map-details {
+        margin-top: 100px;
+      }
+      .map-details summary {
+        cursor: pointer;
+      }
+    </style>
+
+    <script>
+      const map = L.map("map");
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+      const targetMarker = L.marker().addTo(map);
+      map.on("click", onMapClick);
+
+      const initialTargetLatitude = 48.110057410082916;
+      const initialTargetLongitude = -1.389394998550415;
+      document.querySelector("#targetLatitude").value = initialTargetLatitude;
+      document.querySelector("#targetLongitude").value = initialTargetLongitude;
+
+      targetMarker.setLatLng([initialTargetLatitude, initialTargetLongitude]);
+      map.setView([initialTargetLatitude, initialTargetLongitude], 13);
+
+      function onMapClick(e) {
+        const latitude = e.latlng.lat;
+        const longitude = e.latlng.lng;
+
+        document.querySelector("#targetLatitude").value = latitude;
+        document.querySelector("#targetLongitude").value = longitude;
+
+        targetMarker.setLatLng([latitude, longitude]);
+
+        document
+          .querySelector("#geo-trouve")
+          .setAttribute("latitude", latitude);
+        document
+          .querySelector("#geo-trouve")
+          .setAttribute("longitude", longitude);
+      }
+    </script>
+  </body>
+</html>
