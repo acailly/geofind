@@ -1,13 +1,122 @@
 import html from "./html-tag.mjs";
 
+//--------------------------------------------------------------------------------------------------------------
+// Register the custom element
+//--------------------------------------------------------------------------------------------------------------
 if (!customElements.get("geo-trouve")) {
   customElements.define(
     "geo-trouve",
     class extends HTMLElement {
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // STATIC PARAMETERS
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       IS_ON_TARGET_RANGE = 20;
       DISPLAY_UPDATE_INTERVAL = 3000;
+      GEOLOCATION_OPTIONS = {
+        // see https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition#options
+        enableHighAccuracy: true,
+        maximumAge: 3000,
+        timeout: 27000,
+      };
 
-      // Reflected properties, to handle changes, https://blog.ltgt.net/web-component-properties/
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // STYLE
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      STYLE = html` <style>
+        .geo-trouve-root {
+          /* from https://systemfontstack.com/ */
+          font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir,
+            segoe ui, helvetica neue, helvetica, Cantarell, Ubuntu, roboto, noto,
+            arial, sans-serif;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 20px;
+        }
+
+        .geo-trouve-root p {
+          margin: 0;
+        }
+
+        .geo-trouve-text-hint {
+          font-size: 40px;
+        }
+
+        .geo-trouve-icon-hint {
+          font-size: 40px;
+        }
+
+        .geo-trouve-distance {
+          font-size: 16px;
+        }
+
+        .geo-trouve-debug {
+          font-size: 16px;
+          font-family: monospace;
+        }
+
+        /* Animation from https://codepen.io/chrisunderdown/pen/JeXNoz */
+        .geo-trouve-circle {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          aspect-ratio: 1 / 1;
+          padding: 50px;
+          border-radius: 100%;
+          background: #ffffff;
+          box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
+        }
+
+        .geo-trouve-circle::before,
+        .geo-trouve-circle::after {
+          opacity: 0;
+          display: flex;
+          flex-direction: row;
+          justify-content: center;
+          align-items: center;
+          position: absolute;
+          top: -8px;
+          left: -8px;
+          right: 0;
+          bottom: 0;
+          content: "";
+          height: 100%;
+          width: 100%;
+          border: 8px solid rgba(0, 0, 0, 0.2);
+          border-radius: 100%;
+          animation-name: geo-trouve-ripple;
+          animation-duration: 3s;
+          animation-delay: 0s;
+          animation-iteration-count: infinite;
+          animation-timing-function: cubic-bezier(0.65, 0, 0.34, 1);
+          z-index: -1;
+        }
+
+        .geo-trouve-circle::before {
+          animation-delay: 0.5s;
+        }
+
+        @keyframes geo-trouve-ripple {
+          from {
+            opacity: 1;
+            transform: scale3d(0.75, 0.75, 1);
+          }
+
+          to {
+            opacity: 0;
+            transform: scale3d(1.5, 1.5, 1);
+          }
+        }
+      </style>`;
+
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // INPUTS
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // These are reflected properties, to handle changes after component initialization
+      // see https://blog.ltgt.net/web-component-properties/
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       get targetLatitude() {
         return this.getAttribute("latitude");
       }
@@ -16,117 +125,55 @@ if (!customElements.get("geo-trouve")) {
         return this.getAttribute("longitude");
       }
 
-      connectedCallback() {
-        // GET INPUT PARAMS
-        this.showDebugInfo = this.hasAttribute("debug");
-        this.question = this.getAttribute("question");
-        this.reponses = [];
+      get showDebugInfo() {
+        return this.hasAttribute("debug");
+      }
+
+      get question() {
+        return this.getAttribute("question");
+      }
+
+      get reponses() {
+        const reponses = [];
 
         for (let reponseNumber = 1; reponseNumber; reponseNumber++) {
           const reponse = this.getAttribute(`reponse-${reponseNumber}`);
           if (reponse) {
-            this.reponses.push(reponse);
+            reponses.push(reponse);
           } else {
             break;
           }
         }
 
-        // SETUP INITIAL CONDITIONS
+        return reponses;
+      }
+
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // SETUP
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      connectedCallback() {
+        //--------------------------------------------------------------------------------------------------------------
+        // Initial conditions and render
+        //--------------------------------------------------------------------------------------------------------------
         this.previousLastPositionUpdate = new Date().getTime();
         this.previousLastDisplayUpdate = this.previousLastPositionUpdate;
         this.previousLatitude = this.targetLatitude;
         this.previousLongitude = this.targetLongitude;
         this.previousDistanceInverseVincenty = 0;
+        this.initialRender();
 
+        //--------------------------------------------------------------------------------------------------------------
+        // Start monitoring position
+        //--------------------------------------------------------------------------------------------------------------
+        this.start();
+      }
+
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // INITIAL RENDER
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      initialRender() {
         this.innerHTML = html`
-          <style>
-            .geo-trouve-root {
-              /* from https://systemfontstack.com/ */
-              font-family: -apple-system, BlinkMacSystemFont, avenir next,
-                avenir, segoe ui, helvetica neue, helvetica, Cantarell, Ubuntu,
-                roboto, noto, arial, sans-serif;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              padding: 20px;
-            }
-
-            .geo-trouve-root p {
-              margin: 0;
-            }
-
-            .geo-trouve-text-hint {
-              font-size: 40px;
-            }
-
-            .geo-trouve-icon-hint {
-              font-size: 40px;
-            }
-
-            .geo-trouve-distance {
-              font-size: 16px;
-            }
-
-            .geo-trouve-debug {
-              font-size: 16px;
-              font-family: monospace;
-            }
-
-            /* Animation from https://codepen.io/chrisunderdown/pen/JeXNoz */
-            .geo-trouve-circle {
-              position: relative;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
-              aspect-ratio: 1 / 1;
-              padding: 50px;
-              border-radius: 100%;
-              background: #ffffff;
-              box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
-            }
-
-            .geo-trouve-circle::before,
-            .geo-trouve-circle::after {
-              opacity: 0;
-              display: flex;
-              flex-direction: row;
-              justify-content: center;
-              align-items: center;
-              position: absolute;
-              top: -8px;
-              left: -8px;
-              right: 0;
-              bottom: 0;
-              content: "";
-              height: 100%;
-              width: 100%;
-              border: 8px solid rgba(0, 0, 0, 0.2);
-              border-radius: 100%;
-              animation-name: geo-trouve-ripple;
-              animation-duration: 3s;
-              animation-delay: 0s;
-              animation-iteration-count: infinite;
-              animation-timing-function: cubic-bezier(0.65, 0, 0.34, 1);
-              z-index: -1;
-            }
-
-            .geo-trouve-circle::before {
-              animation-delay: 0.5s;
-            }
-
-            @keyframes geo-trouve-ripple {
-              from {
-                opacity: 1;
-                transform: scale3d(0.75, 0.75, 1);
-              }
-
-              to {
-                opacity: 0;
-                transform: scale3d(1.5, 1.5, 1);
-              }
-            }
-          </style>
+          ${this.STYLE}
           <div class="geo-trouve-root">
             <div class="geo-trouve-circle">
               <p class="geo-trouve-text-hint">C'est parti !</p>
@@ -158,47 +205,58 @@ if (!customElements.get("geo-trouve")) {
               </details>`
             : ""}
         `;
-
-        this.start();
       }
 
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // START MONITORING POSITION
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       start() {
-        // TODO empecher la veille de l'écran
-        // https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API
-
+        //--------------------------------------------------------------------------------------------------------------
+        // Enable geolocation on device
+        //--------------------------------------------------------------------------------------------------------------
         if ("geolocation" in navigator) {
-          const success = (position) => {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
+          // TODO vérifier que la geolocation est activée
 
-            this.positionUpdated(latitude, longitude);
-          };
+          //--------------------------------------------------------------------------------------------------------------
+          // Keep the screen on
+          //--------------------------------------------------------------------------------------------------------------
+          // TODO empecher la veille de l'écran
+          // https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API
 
-          const error = (error) => {
-            console.error(error);
-          };
-
-          // see https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition#options
-          const options = {
-            enableHighAccuracy: true,
-            maximumAge: 3000,
-            timeout: 27000,
-          };
-
-          navigator.geolocation.watchPosition(success, error, options);
+          //--------------------------------------------------------------------------------------------------------------
+          // Start listening GPS position
+          //--------------------------------------------------------------------------------------------------------------
+          navigator.geolocation.watchPosition(
+            this.onPositionUpdated.bind(this),
+            this.onError.bind(this),
+            this.GEOLOCATION_OPTIONS
+          );
         } else {
+          //--------------------------------------------------------------------------------------------------------------
+          // Explain that geolocation is not available
+          //--------------------------------------------------------------------------------------------------------------
           alert(`geolocation IS NOT available`);
         }
       }
 
-      positionUpdated(latitude, longitude) {
+      onError(error) {
+        console.error(error);
+      }
+
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // WHEN POSITION IS UPDATED
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      onPositionUpdated(position) {
+        //--------------------------------------------------------------------------------------------------------------
+        // Extract new position
+        //--------------------------------------------------------------------------------------------------------------
         const lastPositionUpdate = new Date().getTime();
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
 
-        const shouldUpdateDisplay =
-          lastPositionUpdate - this.previousLastDisplayUpdate >
-          this.DISPLAY_UPDATE_INTERVAL;
-
-        // Distance
+        //--------------------------------------------------------------------------------------------------------------
+        // Compute the new distance
+        //--------------------------------------------------------------------------------------------------------------
         const distanceInverseVincenty = this.inverseVincentyDistance(
           latitude,
           longitude,
@@ -206,7 +264,9 @@ if (!customElements.get("geo-trouve")) {
           this.targetLongitude
         );
 
-        // DEBUG
+        //--------------------------------------------------------------------------------------------------------------
+        // Update debug infos
+        //--------------------------------------------------------------------------------------------------------------
         if (this.showDebugInfo) {
           document.querySelector(
             ".geo-trouve-debug-previous-distance"
@@ -219,21 +279,39 @@ if (!customElements.get("geo-trouve")) {
           ).textContent = `Target position : Lat=${this.targetLatitude} Lon=${this.targetLongitude}`;
         }
 
-        // Update display
+        //--------------------------------------------------------------------------------------------------------------
+        // Check if we should update the information displayed
+        //--------------------------------------------------------------------------------------------------------------
+        const shouldUpdateDisplay =
+          lastPositionUpdate - this.previousLastDisplayUpdate >
+          this.DISPLAY_UPDATE_INTERVAL;
         if (shouldUpdateDisplay) {
-          // Distance
+          //--------------------------------------------------------------------------------------------------------------
+          // Update the distance
+          //--------------------------------------------------------------------------------------------------------------
           document.querySelector(
             ".geo-trouve-distance"
           ).textContent = `Distance: ${Math.round(distanceInverseVincenty)} m`;
 
-          // Game Hint
+          //--------------------------------------------------------------------------------------------------------------
+          // Check if we are next to the target or not
+          //--------------------------------------------------------------------------------------------------------------
           const isOnTarget = distanceInverseVincenty < this.IS_ON_TARGET_RANGE;
           if (isOnTarget) {
+            //--------------------------------------------------------------------------------------------------------------
+            // Show that we are arrived
+            //--------------------------------------------------------------------------------------------------------------
             document.querySelector(".geo-trouve-icon-hint").textContent = "🎯";
             document.querySelector(".geo-trouve-text-hint").textContent =
               "C'est ici !";
+            //--------------------------------------------------------------------------------------------------------------
+            // Show the question
+            //--------------------------------------------------------------------------------------------------------------
             // TODO afficher la question quand on est proche de la cible
           } else {
+            //--------------------------------------------------------------------------------------------------------------
+            // Update the game hint
+            //--------------------------------------------------------------------------------------------------------------
             const isCloser =
               distanceInverseVincenty - this.previousDistanceInverseVincenty <
               0;
@@ -244,7 +322,9 @@ if (!customElements.get("geo-trouve")) {
               isCloser ? "Tu chauffes" : "Tu refroidis";
           }
 
-          // Previous measure
+          //--------------------------------------------------------------------------------------------------------------
+          // Store the current position for the next time
+          //--------------------------------------------------------------------------------------------------------------
           this.previousLastPositionUpdate = lastPositionUpdate;
           this.previousLastDisplayUpdate = this.previousLastPositionUpdate;
           this.previousLatitude = latitude;
@@ -253,7 +333,12 @@ if (!customElements.get("geo-trouve")) {
         }
       }
 
-      // https://www.jameslmilner.com/posts/measuring-the-world-with-javascript/
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // DISTANCE COMPUTATION
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // Use inverse Vincenty distance formula
+      // see https://www.jameslmilner.com/posts/measuring-the-world-with-javascript/
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       inverseVincentyDistance(latitude1, longitude1, latitude2, longitude2) {
         const toRadians = (latOrLng) => (latOrLng * Math.PI) / 180;
 
