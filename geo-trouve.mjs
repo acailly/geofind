@@ -32,10 +32,15 @@ if (!customElements.get("geo-trouve")) {
           flex-direction: column;
           align-items: center;
           padding: 20px;
+          gap: 40px;
         }
 
         .geo-trouve-root p {
           margin: 0;
+        }
+
+        .geo-trouve-title {
+          font-size: 20px;
         }
 
         .geo-trouve-text-hint {
@@ -117,27 +122,57 @@ if (!customElements.get("geo-trouve")) {
       // These are reflected properties, to handle changes after component initialization
       // see https://blog.ltgt.net/web-component-properties/
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      get title() {
+        return (
+          this.getAttribute("title") ??
+          new URLSearchParams(window.location.search).get("title")
+        );
+      }
+
       get targetLatitude() {
-        return this.getAttribute("latitude");
+        return (
+          this.getAttribute("latitude") ??
+          new URLSearchParams(window.location.search).get("latitude")
+        );
       }
 
       get targetLongitude() {
-        return this.getAttribute("longitude");
+        return (
+          this.getAttribute("longitude") ??
+          new URLSearchParams(window.location.search).get("longitude")
+        );
+      }
+
+      get listId() {
+        return (
+          this.getAttribute("listId") ??
+          new URLSearchParams(window.location.search).get("listId")
+        );
       }
 
       get showDebugInfo() {
-        return this.hasAttribute("debug");
+        return (
+          this.hasAttribute("debug") ??
+          new URLSearchParams(window.location.search).get("debug")
+        );
       }
 
       get question() {
-        return this.getAttribute("question");
+        return (
+          this.getAttribute("question") ??
+          new URLSearchParams(window.location.search).get("question")
+        );
       }
 
       get reponses() {
         const reponses = [];
 
         for (let reponseNumber = 1; reponseNumber; reponseNumber++) {
-          const reponse = this.getAttribute(`reponse-${reponseNumber}`);
+          const reponse =
+            this.getAttribute(`reponse-${reponseNumber}`) ??
+            new URLSearchParams(window.location.search).get(
+              `reponse-${reponseNumber}`
+            );
           if (reponse) {
             reponses.push(reponse);
           } else {
@@ -175,6 +210,14 @@ if (!customElements.get("geo-trouve")) {
         this.innerHTML = html`
           ${this.STYLE}
           <div class="geo-trouve-root">
+            ${this.title
+              ? html`<div class="geo-trouve-title">${this.title ?? ""}</div>`
+              : ""}
+            ${this.listId
+              ? html`<a href="geo-trouve-list?listId=${this.listId}"
+                  >Revenir à la liste</a
+                >`
+              : ""}
             <div class="geo-trouve-circle">
               <p class="geo-trouve-text-hint">C'est parti !</p>
               <p class="geo-trouve-icon-hint">🚀</p>
@@ -320,6 +363,8 @@ if (!customElements.get("geo-trouve")) {
               isCloser ? "🔥" : "❄️";
             document.querySelector(".geo-trouve-text-hint").textContent =
               isCloser ? "Tu chauffes" : "Tu refroidis";
+
+            // TODO gérer l'état où on ne bouge pas assez (les enfants ne comprennent pas qu'il ne faut pas tenir des indications quand on ne bouge pas)
           }
 
           //--------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,11 @@
+{
+  "name": "Chateaubourg",
+  "lists": [
+    {
+      "id": "chateaubourg-sculpteurs",
+      "name": "Le parcours des sculpteurs",
+      "description": "Trouvez les panneaux permettant de découvrir les origines de la sculpture et les courants artistiques, mais aussi les formes, matériaux et techniques de cet art, et bien sûr des portraits d’artistes.",
+      "infoUrl": "https://www.chateaubourg.fr/parcours-des-sculpteurs/"
+    }
+  ]
+}

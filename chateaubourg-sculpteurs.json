@@ -1,116 +1,129 @@
-[
-  {
-    "name": "1 - Châteaubourg, Cité des Sculpteurs",
-    "latitude": 48.10936,
-    "longitude": -1.40502
-  },
-  { "name": "2 - Techniques", "latitude": 48.10948, "longitude": -1.40549 },
-  {
-    "name": "3 - Matériaux et formes",
-    "latitude": 48.1089,
-    "longitude": -1.40699
-  },
-  { "name": "4 - Origines", "latitude": 48.10799, "longitude": -1.40728 },
-  {
-    "name": "5 - Gothique & Renaissance",
-    "latitude": 48.10828,
-    "longitude": -1.40562
-  },
-  { "name": "6 - Michel-Ange", "latitude": 48.1083, "longitude": -1.40454 },
-  {
-    "name": "7 - Baroque & Romantisme",
-    "latitude": 48.10788,
-    "longitude": -1.40442
-  },
-  {
-    "name": "8 - Symbolisme, Futurisme & Constructivisme",
-    "latitude": 48.10759,
-    "longitude": -1.40342
-  },
-  { "name": "9 - Auguste Rodin", "latitude": 48.10691, "longitude": -1.40272 },
-  {
-    "name": "10 - Jardin des Arts",
-    "latitude": 48.10666,
-    "longitude": -1.39813
-  },
-  {
-    "name": "11 - Camille Claudel",
-    "latitude": 48.10823,
-    "longitude": -1.39706
-  },
-  {
-    "name": "12 - Patrick Dougherty",
-    "latitude": 48.10841,
-    "longitude": -1.38235
-  },
-  {
-    "name": "13 - Bauhaus & Art cinétique",
-    "latitude": 48.10864,
-    "longitude": -1.39621
-  },
-  { "name": "14 - Jean Arp", "latitude": 48.10898, "longitude": -1.38272 },
-  {
-    "name": "15 - Artistes multiples : ils sont aussi sculptés",
-    "latitude": 48.10922,
-    "longitude": -1.39876
-  },
-  {
-    "name": "16 - Constantin Brancusi",
-    "latitude": 48.11025,
-    "longitude": -1.38631
-  },
-  { "name": "17 - Jean Dubuffet", "latitude": 48.10577, "longitude": -1.38331 },
-  { "name": "18 - Jeff Koons", "latitude": 48.11101, "longitude": -1.38324 },
-  {
-    "name": "19 - Pop Art & Land Art",
-    "latitude": 48.10947,
-    "longitude": -1.3832
-  },
-  {
-    "name": "20 - César Baldaccini",
-    "latitude": 48.10834,
-    "longitude": -1.38364
-  },
-  {
-    "name": "21 - Niki de Saint Phalle",
-    "latitude": 48.10764,
-    "longitude": -1.3838
-  },
-  {
-    "name": "22 - Louise Bourgeois",
-    "latitude": 48.10721,
-    "longitude": -1.38591
-  },
-  {
-    "name": "23 - Art conceptuel & minimaliste",
-    "latitude": 48.10721,
-    "longitude": -1.38718
-  },
-  {
-    "name": "24 - Hélène Bertaux",
-    "latitude": 48.10907,
-    "longitude": -1.39001
-  },
-  { "name": "25 - Ousmane Sow", "latitude": 48.10883, "longitude": -1.39188 },
-  {
-    "name": "26 - Courants modernes : les arts surprenants",
-    "latitude": 48.10675,
-    "longitude": -1.38111
-  },
-  { "name": "27 -  Ron Mueck", "latitude": 0, "longitude": 0 },
-  {
-    "name": "28 - John Chamberlain",
-    "latitude": 48.11012,
-    "longitude": -1.38747
-  },
-  {
-    "name": "29 - Alberto Giacometti",
-    "latitude": 48.10721,
-    "longitude": -1.39048
-  },
-  {
-    "name": "30 - Alexander Calder",
-    "latitude": 48.10745,
-    "longitude": -1.39253
-  }
-]
+{
+  "id": "chateaubourg-sculpteurs",
+  "cityId": "chateaubourg",
+  "name": "Le parcours des sculpteurs",
+  "caches": [
+    {
+      "name": "1 - Châteaubourg, Cité des Sculpteurs",
+      "latitude": 48.10936,
+      "longitude": -1.40502
+    },
+    { "name": "2 - Techniques", "latitude": 48.10948, "longitude": -1.40549 },
+    {
+      "name": "3 - Matériaux et formes",
+      "latitude": 48.1089,
+      "longitude": -1.40699
+    },
+    { "name": "4 - Origines", "latitude": 48.10799, "longitude": -1.40728 },
+    {
+      "name": "5 - Gothique & Renaissance",
+      "latitude": 48.10828,
+      "longitude": -1.40562
+    },
+    { "name": "6 - Michel-Ange", "latitude": 48.1083, "longitude": -1.40454 },
+    {
+      "name": "7 - Baroque & Romantisme",
+      "latitude": 48.10788,
+      "longitude": -1.40442
+    },
+    {
+      "name": "8 - Symbolisme, Futurisme & Constructivisme",
+      "latitude": 48.10759,
+      "longitude": -1.40342
+    },
+    {
+      "name": "9 - Auguste Rodin",
+      "latitude": 48.10691,
+      "longitude": -1.40272
+    },
+    {
+      "name": "10 - Jardin des Arts",
+      "latitude": 48.10666,
+      "longitude": -1.39813
+    },
+    {
+      "name": "11 - Camille Claudel",
+      "latitude": 48.10823,
+      "longitude": -1.39706
+    },
+    {
+      "name": "12 - Patrick Dougherty",
+      "latitude": 48.10841,
+      "longitude": -1.38235
+    },
+    {
+      "name": "13 - Bauhaus & Art cinétique",
+      "latitude": 48.10864,
+      "longitude": -1.39621
+    },
+    { "name": "14 - Jean Arp", "latitude": 48.10898, "longitude": -1.38272 },
+    {
+      "name": "15 - Artistes multiples : ils sont aussi sculptés",
+      "latitude": 48.10922,
+      "longitude": -1.39876
+    },
+    {
+      "name": "16 - Constantin Brancusi",
+      "latitude": 48.11025,
+      "longitude": -1.38631
+    },
+    {
+      "name": "17 - Jean Dubuffet",
+      "latitude": 48.10577,
+      "longitude": -1.38331
+    },
+    { "name": "18 - Jeff Koons", "latitude": 48.11101, "longitude": -1.38324 },
+    {
+      "name": "19 - Pop Art & Land Art",
+      "latitude": 48.10947,
+      "longitude": -1.3832
+    },
+    {
+      "name": "20 - César Baldaccini",
+      "latitude": 48.10834,
+      "longitude": -1.38364
+    },
+    {
+      "name": "21 - Niki de Saint Phalle",
+      "latitude": 48.10764,
+      "longitude": -1.3838
+    },
+    {
+      "name": "22 - Louise Bourgeois",
+      "latitude": 48.10721,
+      "longitude": -1.38591
+    },
+    {
+      "name": "23 - Art conceptuel & minimaliste",
+      "latitude": 48.10721,
+      "longitude": -1.38718
+    },
+    {
+      "name": "24 - Hélène Bertaux",
+      "latitude": 48.10907,
+      "longitude": -1.39001
+    },
+    { "name": "25 - Ousmane Sow", "latitude": 48.10883, "longitude": -1.39188 },
+    {
+      "name": "26 - Courants modernes : les arts surprenants",
+      "latitude": 48.10675,
+      "longitude": -1.38111
+    },
+    { "name": "27 -  Ron Mueck", "latitude": 0, "longitude": 0 },
+    {
+      "name": "28 - John Chamberlain",
+      "latitude": 48.11012,
+      "longitude": -1.38747
+    },
+    {
+      "name": "29 - Alberto Giacometti",
+      "latitude": 48.10721,
+      "longitude": -1.39048
+    },
+    {
+      "name": "30 - Alexander Calder",
+      "latitude": 48.10745,
+      "longitude": -1.39253
+    }
+  ]
+}
