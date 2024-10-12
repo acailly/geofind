@@ -277,8 +277,36 @@ if (!customElements.get("geo-trouve")) {
           //--------------------------------------------------------------------------------------------------------------
           // Keep the screen on
           //--------------------------------------------------------------------------------------------------------------
-          // TODO empecher la veille de l'écran
           // https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API
+          if ("wakeLock" in navigator) {
+            console.log("Screen Wake Lock API supported!");
+            let wakeLock = null;
+            try {
+              function acquireWakeLock() {
+                navigator.wakeLock
+                  .request("screen")
+                  .then((acquiredWakeLock) => {
+                    console.log("Wake Lock is active!");
+                    wakeLock = acquiredWakeLock;
+
+                    document.addEventListener("visibilitychange", async () => {
+                      if (
+                        wakeLock !== null &&
+                        document.visibilityState === "visible"
+                      ) {
+                        acquireWakeLock();
+                      }
+                    });
+                  });
+              }
+              acquireWakeLock();
+            } catch (err) {
+              // The Wake Lock request has failed - usually system related, such as battery.
+              console.log(`Wake lock error: ${err.name}, ${err.message}`);
+            }
+          } else {
+            console.log("Wake lock is not supported by this browser.");
+          }
 
           //--------------------------------------------------------------------------------------------------------------
           // Start listening GPS position
