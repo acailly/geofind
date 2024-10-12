@@ -114,6 +114,19 @@ if (!customElements.get("geo-trouve")) {
             transform: scale3d(1.5, 1.5, 1);
           }
         }
+
+        .geo-trouve-angle-semi-circle {
+          position: absolute;
+          top: 0;
+          bottom: 50%;
+          right: 0;
+          left: 0;
+          border: blue solid 5px;
+          border-radius: 999px 999px 0 0;
+          border-bottom: none;
+          transform-origin: bottom;
+          opacity: 0.2;
+        }
       </style>`;
 
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -222,6 +235,7 @@ if (!customElements.get("geo-trouve")) {
               <p class="geo-trouve-text-hint">C'est parti !</p>
               <p class="geo-trouve-icon-hint">🚀</p>
               <p class="geo-trouve-distance">Commence à te déplacer</p>
+              <p class="geo-trouve-angle-semi-circle"></p>
             </div>
           </div>
           ${this.showDebugInfo
@@ -308,6 +322,16 @@ if (!customElements.get("geo-trouve")) {
         );
 
         //--------------------------------------------------------------------------------------------------------------
+        // Compute the angle between old and new coordinates
+        //--------------------------------------------------------------------------------------------------------------
+        const angle = this.angleFromCoordinate(
+          latitude,
+          longitude,
+          this.targetLatitude,
+          this.targetLongitude
+        );
+
+        //--------------------------------------------------------------------------------------------------------------
         // Update debug infos
         //--------------------------------------------------------------------------------------------------------------
         if (this.showDebugInfo) {
@@ -347,6 +371,9 @@ if (!customElements.get("geo-trouve")) {
             document.querySelector(".geo-trouve-icon-hint").textContent = "🎯";
             document.querySelector(".geo-trouve-text-hint").textContent =
               "C'est ici !";
+            document.querySelector(
+              ".geo-trouve-angle-semi-circle"
+            ).style.transform = `rotate(0deg)`;
             //--------------------------------------------------------------------------------------------------------------
             // Show the question
             //--------------------------------------------------------------------------------------------------------------
@@ -382,6 +409,10 @@ if (!customElements.get("geo-trouve")) {
                   "Tu refroidis";
               }
             }
+
+            document.querySelector(
+              ".geo-trouve-angle-semi-circle"
+            ).style.transform = `rotate(${angle}deg)`;
           }
 
           //--------------------------------------------------------------------------------------------------------------
@@ -501,6 +532,30 @@ if (!customElements.get("geo-trouve")) {
         const distance = b * A * (sigma - deltaSigma); // distance = length of the geodesic
 
         return distance;
+      }
+
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // ANGLE BETWEEN TWO COORDINATES COMPUTATION
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // see https://stackoverflow.com/a/18738281
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      angleFromCoordinate(latitude1, longitude1, latitude2, longitude2) {
+        const dLon = longitude2 - longitude1;
+
+        const y = Math.sin(dLon) * Math.cos(latitude2);
+        const x =
+          Math.cos(latitude1) * Math.sin(latitude2) -
+          Math.sin(latitude1) * Math.cos(latitude2) * Math.cos(dLon);
+
+        let bearing = Math.atan2(y, x);
+        bearing = this.toDegrees(bearing);
+        bearing = (bearing + 360) % 360;
+        bearing = 360 - bearing; // count degrees counter-clockwise - remove to make clockwise
+
+        return bearing;
+      }
+      toDegrees(angleInRadians) {
+        return (angleInRadians * 180) / Math.PI;
       }
     }
   );
