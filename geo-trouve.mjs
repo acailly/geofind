@@ -355,16 +355,33 @@ if (!customElements.get("geo-trouve")) {
             //--------------------------------------------------------------------------------------------------------------
             // Update the game hint
             //--------------------------------------------------------------------------------------------------------------
-            const isCloser =
-              distanceInverseVincenty - this.previousDistanceInverseVincenty <
-              0;
+            const hasNotMovedEnough =
+              Math.abs(
+                distanceInverseVincenty - this.previousDistanceInverseVincenty
+              ) < 5;
 
-            document.querySelector(".geo-trouve-icon-hint").textContent =
-              isCloser ? "🔥" : "❄️";
-            document.querySelector(".geo-trouve-text-hint").textContent =
-              isCloser ? "Tu chauffes" : "Tu refroidis";
+            if (hasNotMovedEnough) {
+              document.querySelector(".geo-trouve-icon-hint").textContent =
+                "🏃";
+              document.querySelector(".geo-trouve-text-hint").textContent =
+                "Déplace-toi";
+            } else {
+              const isCloser =
+                distanceInverseVincenty - this.previousDistanceInverseVincenty <
+                0;
 
-            // TODO gérer l'état où on ne bouge pas assez (les enfants ne comprennent pas qu'il ne faut pas tenir des indications quand on ne bouge pas)
+              if (isCloser) {
+                document.querySelector(".geo-trouve-icon-hint").textContent =
+                  "🔥";
+                document.querySelector(".geo-trouve-text-hint").textContent =
+                  "Tu chauffes";
+              } else {
+                document.querySelector(".geo-trouve-icon-hint").textContent =
+                  "❄️";
+                document.querySelector(".geo-trouve-text-hint").textContent =
+                  "Tu refroidis";
+              }
+            }
           }
 
           //--------------------------------------------------------------------------------------------------------------
